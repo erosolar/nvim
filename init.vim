@@ -15,15 +15,17 @@ Plug 'w0rp/ale'
 " tag viewing (testing)
 Plug 'majutsushi/tagbar'
 " status bar
-Plug 'vim-airline/vim-airline'
+Plug 'itchyny/lightline.vim'
+Plug 'mgee/lightline-bufferline'
 " git showing things
 Plug 'airblade/vim-gitgutter'
+Plug 'tpope/vim-fugitive'
 " multiple cursors
 Plug 'terryma/vim-multiple-cursors'
 " easy surrounding (parens, brackets, quotes)
 Plug 'tpope/vim-surround'
 " color schemes!
-Plug 'chriskempson/vim-tomorrow-theme'
+Plug 'fenetikm/falcon'
 
 " go support
 Plug 'fatih/vim-go'
@@ -36,10 +38,11 @@ Plug 'the-lambda-church/coquille', { 'branch': 'pathogen-bundle' }
 Plug 'neovimhaskell/haskell-vim'
 call plug#end()
 
+
 " colors and basic look/feel
 set termguicolors
 set background=dark
-colorscheme Tomorrow-Night-Bright
+colorscheme falcon
 
 set colorcolumn=79,119
 set number
@@ -59,8 +62,6 @@ set list!
 
 " space = <Leader>
 let mapleader=" "
-" <Leader>s re-sources the config file
-map <Leader>s :source ~/.config/nvim/init.vim<CR>
 
 " convenience for using multiple buffers
 set hidden
@@ -89,16 +90,124 @@ set backspace=2
 " so we can scroll other splits without being in them
 set mouse=a
 
+" terminal
+" remap escape to exit terminal, while in terminal mode
+:tnoremap <Esc> <C-\><C-n>
+
 " PLUGIN CONFIGURATION
 
-" vim-airline
-let g:airline_powerline_fonts = 1
-let g:airline#extensions#tabline#enabled=1
-set ttimeoutlen=10
+" lightline
 set laststatus=2
 set noshowmode
-" ale integration
-let g:airline#extensions#ale#enabled = 1
+set showtabline=2
+let g:falcon_lightline=1
+let g:lightline={
+      \ 'colorscheme': 'falcon',
+      \ 'active': {
+      \   'left': [ [ 'mode', 'paste' ],
+      \             [ 'readonly', 'filename', 'modified' ] ],
+      \   'right': [ [ 'linter_errors', 'linter_warnings', 'linter_infos', 'linter_ok', 'linter_checking' ],
+      \              [ 'lineinfo', 'percent' ],
+      \              [ 'spell' ],
+      \              [ 'fileformat', 'fileencoding', 'filetype' ] ],
+      \ },
+      \ 'component': {
+      \   'lineinfo': '⭡ %3l:%-2v',
+      \ },
+      \ 'component_function': {
+      \   'fileformat': 'FileformatIgnoreWhenSmall',
+      \   'filetype': 'FiletypeIgnoreWhenSmall',
+      \   'readonly': 'LightlineReadonly',
+      \   'gitbranch': 'LightlineFugitive',
+      \ },
+      \ 'component_expand': {
+      \   'buffers': 'lightline#bufferline#buffers',
+      \   'linter': 'LinterStatus',
+      \   'linter_checking': 'LinterChecking',
+      \   'linter_warnings': 'LinterWarnings',
+      \   'linter_errors': 'LinterErrors',
+      \   'linter_infos': 'LinterInfos',
+      \   'linter_ok': 'LinterOkay',
+      \ },
+      \ 'component_type': {
+      \   'buffers': 'tabsel',
+      \   'linter_checking': 'left',
+      \   'linter_warnings': 'warning',
+      \   'linter_errors': 'error',
+      \   'linter_infos': 'left',
+      \   'linter_ok': 'left',
+      \ },
+      \ 'tabline': {
+      \   'left': [ [ 'buffers' ] ],
+      \   'right': [ [ 'gitbranch' ] ],
+      \ },
+      \ }
+function! FiletypeIgnoreWhenSmall()
+    return winwidth(0)>70 ? (&filetype !=# '' ? &filetype : 'no ft') : ''
+endfunction
+function! FileformatIgnoreWhenSmall()
+    return winwidth(0)>70 ? &fileformat : ''
+endfunction
+function! LightlineReadonly()
+    return &readonly ? '⭤' : ''
+endfunction
+
+" ale lightline functions
+function! LinterChecking() abort
+    return ale#engine#IsCheckingBuffer(bufnr('')) ? 'Linting...' : ''
+endfunction
+function! AleLinted() abort
+    return get(g:, 'ale_enabled', 0) == 1 && getbufvar(bufnr(''), 'ale_linted', 0) > 0 && !ale#engine#IsCheckingBuffer(bufnr(''))
+endfunction
+function! LinterErrors() abort
+    if !AleLinted()
+        return ''
+    endif
+    let l:counts = ale#statusline#Count(bufnr(''))
+    let l:all_errors = l:counts.error + l:counts.style_error
+    return l:all_errors == 0 ? '' : printf('E: %d', all_errors)
+endfunction
+function! LinterWarnings() abort
+    if !AleLinted()
+        return ''
+    endif
+    let l:counts = ale#statusline#Count(bufnr(''))
+    let l:all_warn = l:counts.warning + l:counts.style_warning
+    return l:all_warn == 0 ? '' : printf('W: %d', all_warn)
+endfunction
+function! LinterInfos() abort
+    if !AleLinted()
+        return ''
+    endif
+    let l:counts = ale#statusline#Count(bufnr(''))
+    return l:counts.info == 0 ? '' : printf('I: %d', counts.info)
+endfunction
+function! LinterOkay() abort
+    if !AleLinted()
+        return ''
+    endif
+    let l:counts = ale#statusline#Count(bufnr(''))
+    return l:counts.total == 0 ? 'OK' : ''
+endfunction
+augroup ALEProgress
+    autocmd!
+    autocmd User ALELintPre call lightline#update()
+    autocmd User ALELintPost call lightline#update()
+augroup END
+
+" git-fugitive lightline fn
+function! LightlineFugitive()
+    if exists('*fugitive#head')
+        let branch = fugitive#head()
+        return branch !=# '' ? ' '.branch : ''
+    endif
+    return ''
+endfunction
+
+
+" ale
+let g:ale_lint_on_text_changed='never'
+let g:ale_lint_on_insert_leave=1
 
 " ctrlp config
 let g:ctrlp_map = '<Leader>t'
