@@ -5,11 +5,16 @@ Plug 'ctrlpvim/ctrlp.vim'
 " easy commenting of lines
 Plug 'scrooloose/nerdcommenter'
 " tab completion
-Plug 'roxma/nvim-completion-manager'
-" language specific tab completion
-Plug 'roxma/ncm-clang' " c/c++
-Plug 'roxma/nvim-cm-tern',  {'do': 'npm install'} " javascript
-Plug 'fgrsnau/ncm-otherbuf' " other buffers
+Plug 'ncm2/ncm2'
+" requires nvim-yarp
+Plug 'roxma/nvim-yarp'
+" specific language/buffers
+Plug 'ncm2/ncm2-go' " golang
+Plug 'ncm2/ncm2-pyclang' " c/c++
+Plug 'ncm2/ncm2-jedi' " python
+Plug 'ncm2/ncm2-tern', {'do': 'npm install'} " javascript
+Plug 'ncm2/ncm2-bufword' " words from current buffer
+
 " linting
 Plug 'w0rp/ale'
 " tag viewing (testing)
@@ -25,12 +30,12 @@ Plug 'terryma/vim-multiple-cursors'
 " easy surrounding (parens, brackets, quotes)
 Plug 'tpope/vim-surround'
 " color schemes!
-Plug 'fenetikm/falcon'
+Plug 'dracula/vim', {'as': 'dracula'}
 
 " go support
 Plug 'fatih/vim-go'
 " for autocompletion
-Plug 'nsf/gocode', { 'rtp': 'nvim', 'do': '~/.config/nvim/plugged/gocode/nvim/symlink.sh' }
+Plug 'mdempsky/gocode', {'rtp': 'nvim', 'do': '~/.local/share/nvim/plugged/gocode/nvim/symlink.sh >> ~/tmp.log 2>&1'}
 " coquille (coq IDE in vim)
 Plug 'let-def/vimbufsync'
 Plug 'the-lambda-church/coquille', { 'branch': 'pathogen-bundle' }
@@ -42,7 +47,7 @@ call plug#end()
 " colors and basic look/feel
 set termguicolors
 set background=dark
-colorscheme falcon
+colorscheme dracula
 
 set colorcolumn=79,119
 set number
@@ -100,9 +105,8 @@ set mouse=a
 set laststatus=2
 set noshowmode
 set showtabline=2
-let g:falcon_lightline=1
 let g:lightline={
-      \ 'colorscheme': 'falcon',
+      \ 'colorscheme': 'Dracula',
       \ 'active': {
       \   'left': [ [ 'mode', 'paste' ],
       \             [ 'readonly', 'filename', 'modified' ] ],
@@ -215,10 +219,9 @@ let g:ctrlp_open_new_file = 'r'
 let g:ctrlp_open_multiple_files = 'i'
 nnoremap <Leader>b :CtrlPBuffer<CR>
 
-" nvim-completion-engine config
-" if i hit enter, i want a newline, damnit
-inoremap <expr> <CR> (pumvisible() ? "\<c-y>\<cr>" : "\<CR>")
-" tab to select popup menu
+" ncm2 config
+autocmd BufEnter * call ncm2#enable_for_buffer()
+set completeopt=noinsert,menuone,noselect
 inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 
@@ -260,6 +263,24 @@ let g:go_highlight_fields = 1
 let g:go_highlight_types = 1
 let g:go_highlight_operators = 1
 let g:go_highlight_build_constraints = 1
+let g:go_metalinter_enabled = [
+ \  'deadcode',
+ \  'errcheck',
+ \  'gofmt',
+ \  'goimports',
+ \  'ineffassign',
+ \  'megacheck',
+ \  'misspell',
+ \  'vet'
+ \ ]
+" make a `lint entire project` comamnd
+command GoMetaLint :execute "GoMetaLinter " . FugitiveGitDir() . "/../..."
+
+
+
+let g:go_auto_type_info = 1
+set updatetime=100
+let g:go_auto_sameids = 1
 
 " coquille config
 nnoremap <Leader>n :CoqNext<CR>
