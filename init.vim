@@ -41,8 +41,14 @@ Plug 'let-def/vimbufsync'
 Plug 'the-lambda-church/coquille', { 'branch': 'pathogen-bundle' }
 " haskell
 Plug 'neovimhaskell/haskell-vim'
+" react
+Plug 'pangloss/vim-javascript'
+Plug 'mxw/vim-jsx'
 call plug#end()
 
+" to give cloudformation templates correct filetype and syntax
+au BufReadPost *.template set filetype=cloudformation
+au BufReadPost *.template set syntax=yaml
 
 " colors and basic look/feel
 set termguicolors
