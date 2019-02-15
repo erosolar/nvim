@@ -112,7 +112,7 @@ set laststatus=2
 set noshowmode
 set showtabline=2
 let g:lightline={
-      \ 'colorscheme': 'Dracula',
+      \ 'colorscheme': 'dracula',
       \ 'active': {
       \   'left': [ [ 'mode', 'paste' ],
       \             [ 'readonly', 'filename', 'modified' ] ],
