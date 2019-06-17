@@ -30,12 +30,14 @@ Plug 'terryma/vim-multiple-cursors'
 " easy surrounding (parens, brackets, quotes)
 Plug 'tpope/vim-surround'
 " color schemes!
-Plug 'dracula/vim', {'as': 'dracula'}
+Plug 'chriskempson/base16-vim'
+Plug 'daviesjamie/vim-base16-lightline'
 
 " go support
 Plug 'fatih/vim-go'
 " for autocompletion
-Plug 'mdempsky/gocode', {'rtp': 'nvim', 'do': '~/.local/share/nvim/plugged/gocode/nvim/symlink.sh >> ~/tmp.log 2>&1'}
+"Plug 'mdempsky/gocode', {'rtp': 'nvim', 'do': '~/.local/share/nvim/plugged/gocode/nvim/symlink.sh >> ~/tmp.log 2>&1'}
+Plug 'stamblerre/gocode', {'rtp': 'nvim', 'do': '~/.local/share/nvim/plugged/gocode/nvim/symlink.sh >> ~/tmp.log 2>&1'}
 " coquille (coq IDE in vim)
 Plug 'let-def/vimbufsync'
 Plug 'the-lambda-church/coquille', { 'branch': 'pathogen-bundle' }
@@ -51,9 +53,13 @@ au BufReadPost *.template set filetype=cloudformation
 au BufReadPost *.template set syntax=yaml
 
 " colors and basic look/feel
-set termguicolors
-set background=dark
-colorscheme dracula
+"set termguicolors
+set background=light
+colorscheme base16-harmonic-light
+if filereadable(expand("~/.vimrc_background"))
+    let base16colorspace=256
+    source ~/.vimrc_background
+endif
 
 set colorcolumn=79,119
 set number
@@ -112,7 +118,7 @@ set laststatus=2
 set noshowmode
 set showtabline=2
 let g:lightline={
-      \ 'colorscheme': 'dracula',
+      \ 'colorscheme': 'base16',
       \ 'active': {
       \   'left': [ [ 'mode', 'paste' ],
       \             [ 'readonly', 'filename', 'modified' ] ],
@@ -122,7 +128,7 @@ let g:lightline={
       \              [ 'fileformat', 'fileencoding', 'filetype' ] ],
       \ },
       \ 'component': {
-      \   'lineinfo': '⭡ %3l:%-2v',
+      \   'lineinfo': ' %3l:%-2v',
       \ },
       \ 'component_function': {
       \   'fileformat': 'FileformatIgnoreWhenSmall',
@@ -130,6 +136,8 @@ let g:lightline={
       \   'readonly': 'LightlineReadonly',
       \   'gitbranch': 'LightlineFugitive',
       \ },
+      \ 'separator': { 'left': '', 'right': '' },
+      \ 'subseparator': { 'left': '', 'right': '' },
       \ 'component_expand': {
       \   'buffers': 'lightline#bufferline#buffers',
       \   'linter': 'LinterStatus',
@@ -159,7 +167,7 @@ function! FileformatIgnoreWhenSmall()
     return winwidth(0)>70 ? &fileformat : ''
 endfunction
 function! LightlineReadonly()
-    return &readonly ? '⭤' : ''
+    return &readonly ? '' : ''
 endfunction
 
 " ale lightline functions
@@ -228,6 +236,11 @@ nnoremap <Leader>b :CtrlPBuffer<CR>
 " ncm2 config
 autocmd BufEnter * call ncm2#enable_for_buffer()
 set completeopt=noinsert,menuone,noselect
+" enable autocomplete for backspace, <c-w>
+au TextChangedI * call ncm2#auto_trigger()
+" when i say i want a newline, i want a newline, damnit
+inoremap <expr> <CR> (pumvisible() ? "\<c-y>\<cr>" : "\<CR>")
+" use tab to select the popup menu
 inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 
